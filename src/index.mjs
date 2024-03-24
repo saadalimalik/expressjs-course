@@ -1,5 +1,12 @@
-import express, { response } from 'express';
+import express from 'express';
 import dotenv from 'dotenv';
+import {
+  query,
+  validationResult,
+  checkSchema,
+  matchedData,
+} from 'express-validator';
+import { GetUsersByFilterSchema } from './utils/validation/schemas/validationSchemas.mjs';
 
 // Configuring the environment variables on the process
 dotenv.config();
@@ -36,21 +43,29 @@ app.get('/', (request, response) => {
 });
 
 // -User Routes
-app.get('/api/users', (request, response) => {
-  const {
-    query: { filter, value },
-  } = request;
+app.get(
+  '/api/users',
+  checkSchema(GetUsersByFilterSchema),
+  (request, response) => {
+    const result = validationResult(request);
 
-  if (filter && value) {
-    return response.send(
-      mockUsers.filter((user) => {
-        return user[filter]?.includes(value);
-      })
-    );
+    if (!result.isEmpty())
+      return response.status(400).send({ errors: result.array() });
+
+    const { filter, value } = matchedData(request);
+    console.log(data);
+
+    if (filter && value) {
+      return response.send(
+        mockUsers.filter((user) => {
+          return user[filter]?.includes(value);
+        })
+      );
+    }
+
+    return response.send(mockUsers);
   }
-
-  return response.send(mockUsers);
-});
+);
 
 app.post('/api/users', (request, response) => {
   const { body } = request;
