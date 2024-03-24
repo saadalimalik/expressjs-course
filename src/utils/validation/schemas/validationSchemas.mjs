@@ -1,4 +1,4 @@
-export const GetUsersByFilterSchema = {
+export const GetUsersValidationSchema = {
   filter: {
     notEmpty: {
       errorMessage: 'Filter cannot be empty.',
@@ -20,6 +20,54 @@ export const GetUsersByFilterSchema = {
     },
     isString: {
       errorMessage: 'Filter value must be string.',
+    },
+  },
+};
+
+export const CreateUserValidationSchema = {
+  name: {
+    notEmpty: {
+      errorMessage: 'Name must not be empty.',
+    },
+    isString: {
+      errorMessage: 'Name must be a string.',
+    },
+    isLength: {
+      options: {
+        min: 2,
+        max: 12,
+      },
+      errorMessage: 'Name must be between 2 and 32 characters long.',
+    },
+  },
+  displayName: {
+    notEmpty: {
+      errorMessage: 'Display Name must not be empty.',
+    },
+    isString: {
+      errorMessage: 'Display Name must be a string.',
+    },
+    isLength: {
+      options: {
+        min: 2,
+        max: 12,
+      },
+      errorMessage: 'Display Name must be between 2 and 32 characters long.',
+    },
+  },
+  job: {
+    notEmpty: {
+      errorMessage: 'Job must not be empty.',
+    },
+    isString: {
+      errorMessage: 'Job must be a string.',
+    },
+    isLength: {
+      options: {
+        min: 2,
+        max: 12,
+      },
+      errorMessage: 'Job must be between 2 and 32 characters long.',
     },
   },
 };

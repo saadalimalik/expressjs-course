@@ -1,12 +1,15 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import {
-  query,
+  body,
   validationResult,
   checkSchema,
   matchedData,
 } from 'express-validator';
-import { GetUsersByFilterSchema } from './utils/validation/schemas/validationSchemas.mjs';
+import {
+  CreateUserValidationSchema,
+  GetUsersValidationSchema,
+} from './utils/validation/schemas/validationSchemas.mjs';
 
 // Configuring the environment variables on the process
 dotenv.config();
@@ -17,6 +20,7 @@ const app = express();
 // Middleware to handle incoming JSON data
 app.use(express.json());
 
+// Mock Users to imitate database functionality
 const mockUsers = [
   { id: 1, name: 'anthony', displayName: 'Anthony', job: 'developer' },
   { id: 2, name: 'john', displayName: 'John', job: 'project_manager' },
@@ -45,7 +49,7 @@ app.get('/', (request, response) => {
 // -User Routes
 app.get(
   '/api/users',
-  checkSchema(GetUsersByFilterSchema),
+  checkSchema(GetUsersValidationSchema),
   (request, response) => {
     const result = validationResult(request);
 
@@ -53,7 +57,6 @@ app.get(
       return response.status(400).send({ errors: result.array() });
 
     const { filter, value } = matchedData(request);
-    console.log(data);
 
     if (filter && value) {
       return response.send(
@@ -67,13 +70,21 @@ app.get(
   }
 );
 
-app.post('/api/users', (request, response) => {
-  const { body } = request;
-  const newUser = { id: mockUsers[mockUsers.length - 1].id + 1, ...body };
+app.post(
+  '/api/users',
+  checkSchema(CreateUserValidationSchema),
+  (request, response) => {
+    const result = validationResult(request);
+    if (!result.isEmpty())
+      return response.status(400).send({ errors: result.array() });
 
-  mockUsers.push(newUser);
-  return response.status(201).send(newUser);
-});
+    const data = matchedData(request);
+    const newUser = { id: mockUsers[mockUsers.length - 1].id + 1, ...data };
+
+    mockUsers.push(newUser);
+    return response.status(201).send(newUser);
+  }
+);
 
 app.get('/api/users/:id', resolveIndexByUserId, (request, response) => {
   const { findUserIndex } = request;
