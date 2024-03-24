@@ -7,11 +7,28 @@ dotenv.config();
 // Initialize the application
 const app = express();
 
+// Middleware to handle incoming JSON data
+app.use(express.json());
+
 const mockUsers = [
   { id: 1, name: 'anthony', displayName: 'Anthony', job: 'developer' },
   { id: 2, name: 'john', displayName: 'John', job: 'project_manager' },
   { id: 3, name: 'emilia', displayName: 'Emilia', job: 'marketing_manager' },
 ];
+
+// Resolving user id middleware
+const resolveIndexByUserId = (request, response, next) => {
+  const {
+    params: { id },
+  } = request;
+  const parsedId = parseInt(id);
+  if (isNaN(parsedId)) return response.sendStatus(400);
+  const findUserIndex = mockUsers.findIndex((user) => user.id === parsedId);
+  if (findUserIndex === -1) return response.sendStatus(404);
+  request.findUserIndex = findUserIndex;
+
+  next();
+};
 
 // Setup routes
 app.get('/', (request, response) => {
@@ -35,20 +52,39 @@ app.get('/api/users', (request, response) => {
   return response.send(mockUsers);
 });
 
-app.get('/api/users/:id', (request, response) => {
-  const parsedId = parseInt(request.params.id);
+app.post('/api/users', (request, response) => {
+  const { body } = request;
+  const newUser = { id: mockUsers[mockUsers.length - 1].id + 1, ...body };
 
-  if (isNaN(parsedId)) {
-    return response.status(400).send({ msg: 'Bad Request. Invalid ID.' });
-  }
+  mockUsers.push(newUser);
+  return response.status(201).send(newUser);
+});
 
-  const userFound = mockUsers.find((user) => user.id === parsedId);
+app.get('/api/users/:id', resolveIndexByUserId, (request, response) => {
+  const { findUserIndex } = request;
 
-  if (!userFound) {
-    return response.sendStatus(404);
-  }
+  return response.send(mockUsers[findUserIndex]);
+});
 
-  return response.send(userFound);
+app.put('/api/users/:id', resolveIndexByUserId, (request, response) => {
+  const { body, findUserIndex } = request;
+
+  mockUsers[findUserIndex] = { id: mockUsers[findUserIndex].id, ...body };
+  return response.sendStatus(200);
+});
+
+app.patch('/api/users/:id', resolveIndexByUserId, (request, response) => {
+  const { body, findUserIndex } = request;
+
+  mockUsers[findUserIndex] = { ...mockUsers[findUserIndex], ...body };
+  return response.sendStatus(200);
+});
+
+app.delete('/api/users/:id', resolveIndexByUserId, (request, response) => {
+  const { findUserIndex } = request;
+
+  mockUsers.splice(findUserIndex, 1);
+  return response.sendStatus(200);
 });
 
 // Setup port for the server
