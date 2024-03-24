@@ -11,6 +11,12 @@ const router = Router();
 
 // -User Routes
 router.get('/', checkSchema(GetUsersValidationSchema), (request, response) => {
+  request.sessionStore.get(request.session.id, (err, sessionData) => {
+    if (err) throw err;
+
+    console.log(sessionData);
+  });
+
   const result = validationResult(request);
 
   if (!result.isEmpty())
